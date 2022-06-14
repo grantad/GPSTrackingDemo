@@ -1,14 +1,21 @@
 package com.palemetto.gpstrackingdemo;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.location.Location;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Switch;
 import android.widget.TextView;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationRequest;
-
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.Priority;
+import com.google.android.gms.tasks.OnSuccessListener;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -51,12 +58,51 @@ public class MainActivity extends AppCompatActivity {
 
         locationRequest = new LocationRequest();
 
+
         // how often does teh default location check occur?
-        locationRequest.setInterval(1000 * FAST_UPDATE_INTERVAL);
+        locationRequest.setInterval(1000 * DEFAULT_UPDATE_INTERVAL);
 
         // how often does the location check occur when set to the most frequest update?
-        locationRequest.setFastestInterval(1000 * DEFAULT_UPDATE_INTERVAL);
+        locationRequest.setFastestInterval(1000 * FAST_UPDATE_INTERVAL);
 
+        locationRequest.setPriority(locationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
+
+        sw_gps.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (sw_gps.isChecked()) {
+                    // most accurate -- use GPS
+                    locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+                    tv_sensor.setText("Using GPS sensors");
+                }
+                else {
+                    locationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
+                    tv_sensor.setText("Using Towers + WiFi");
+                }
+            }
+        });
+
+    }  // end of onCreate method
+
+    private void updateGPS() {
+        // get permissions from the user to track GPS
+        // get the current location from the fused client
+        // update the UI - i.e. set all properties in their associated text view items.
+
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(MainActivity.this);
+
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            // user provided the permission
+            fusedLocationProviderClient.getLastLocation().addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                @Override
+                public void onSuccess(Location location) {
+                    // we got permissions. Put the values of location.  XXX into the UI components.
+                }
+            })
+        }
+        else {
+            // permissions not granted yet.
+        }
     }
 
 
